@@ -13,13 +13,19 @@ public class PlayerScript : MonoBehaviour
     [SerializeField] private float bulletSpeed;
     [SerializeField] private float bulletDamage;
 
+    [Header("Skills")]
+    [SerializeField] private float dashStrength;
+
     [SerializeField] private GameObject bulletPrefab;
     [SerializeField] private GameObject slamVisual;
 
     private float lastShot;
 
+    private Vector3 moveDir;
+
     private bool dashing;
     private Vector2 dashVel;
+    
 
     private void Start()
     {
@@ -42,13 +48,13 @@ public class PlayerScript : MonoBehaviour
         lookDirection.z = 0;
         transform.up = lookDirection.normalized;
 
-        Vector3 moveTowards = Vector3.zero;
-        if (Input.GetKey(KeyCode.W)) moveTowards.y = 1;
-        if (Input.GetKey(KeyCode.S)) moveTowards.y = -1;
-        if (Input.GetKey(KeyCode.D)) moveTowards.x = 1;
-        if (Input.GetKey(KeyCode.A)) moveTowards.x = -1;
+        moveDir = Vector3.zero;
+        if (Input.GetKey(KeyCode.W)) moveDir.y = 1;
+        if (Input.GetKey(KeyCode.S)) moveDir.y = -1;
+        if (Input.GetKey(KeyCode.D)) moveDir.x = 1;
+        if (Input.GetKey(KeyCode.A)) moveDir.x = -1;
 
-        transform.position += moveTowards.normalized * moveSpeed * Time.deltaTime;
+        transform.position += moveDir.normalized * moveSpeed * Time.deltaTime;
     }
     
     void PlayerActions()
@@ -56,7 +62,7 @@ public class PlayerScript : MonoBehaviour
         lastShot += Time.deltaTime;
         if (Input.GetMouseButton(0) && lastShot >= fireRate) Shoot();
         if (Input.GetKeyDown(KeyCode.LeftShift)) StartCoroutine(Dash());
-        if (Input.GetKeyDown(KeyCode.Alpha1)) StartCoroutine(Slam());
+        if (Input.GetKeyDown(KeyCode.E)) StartCoroutine(Slam());
     }
 
     void Shoot()
@@ -76,16 +82,14 @@ public class PlayerScript : MonoBehaviour
     IEnumerator Dash()
     {
         dashing = true;
-        Vector2 mousePos = Camera.main.ScreenToWorldPoint(Input.mousePosition);
-        Vector2 tranformPos = transform.position;
+        dashVel = moveDir * dashStrength;
+        Color originalColor = GetComponent<SpriteRenderer>().color;
 
-        Vector2 dashDir = (mousePos - tranformPos).normalized;
-        dashVel = dashDir * moveSpeed * 5;
-
+        GetComponent<SpriteRenderer>().color = originalColor - new Color(0, 0, 0, 0.5f);
         GetComponent<Rigidbody2D>().velocity = dashVel;
         yield return new WaitForSeconds(0.1f);
         GetComponent<Rigidbody2D>().velocity = Vector2.zero;
-
+        GetComponent<SpriteRenderer>().color = originalColor;
         dashing = false;
     }
 
